@@ -22,9 +22,9 @@ var (
 )
 
 // FromMap sets the fields of the struct s that are tagged with t
-// and exist in m. The fields that are looked up and set, depend on
-// the onlyTagged value. If is set to true, FromMap only looks
-// for fields with a tag, otherwise it attempts to set every field.
+// and exist in the map m. The fields that are looked up and set,
+// depend on the onlyTagged value. If is set to true, FromMap only
+// looks for fields with a tag, otherwise it attempts to set every field.
 func FromMap(t string, m map[string]interface{}, s interface{}, onlyTagged bool) error {
 	// we need a pointer to a struct
 	if reflect.TypeOf(s).Kind() != reflect.Ptr {
@@ -75,7 +75,7 @@ func FromMap(t string, m map[string]interface{}, s interface{}, onlyTagged bool)
 	return nil
 }
 
-// AddToMap adds the values in the fields of the struct s that are tagged with t to m
+// AddToMap adds the values in the fields of the struct s that are tagged with t to the map m
 // AddToMap looks for the tag t on the field and uses it as a key in m, if there is no tag,
 // the field name is used instead. Fields tagged with "-" are ignored and if onlyTagged
 // is set to true, all fields are copied to m, otherwise, copy only occurs in tagged fields.
@@ -147,6 +147,9 @@ func Marshal(v interface{}) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// MarshalOnly is an utility function that sets the field OnlyTagged
+// to true and the field Tag to tag. In these conditions, struct fields
+// are marshaled only if they are tagged with something other than "" or "-"
 func MarshalOnly(v interface{}, tag string) ([]byte, error) {
 	b := bytes.NewBuffer(make([]byte, 0, 128))
 	enc := NewEncoder(b)
@@ -291,7 +294,7 @@ func encode(enc *Encoder, v interface{}) error {
 	// strings
 	case string:
 		b = []byte(v)
-		if err := encode(enc, uint64(len(b))); err != nil {
+		if err := encode(enc, uint32(len(b))); err != nil {
 			return err
 		}
 	default:
@@ -311,7 +314,7 @@ func encode(enc *Encoder, v interface{}) error {
 		// arrays and slices
 		case reflect.Array, reflect.Slice:
 			if k == reflect.Slice {
-				if err := encode(enc, uint64(val.Len())); err != nil {
+				if err := encode(enc, uint32(val.Len())); err != nil {
 					return err
 				}
 			}
@@ -328,7 +331,7 @@ func encode(enc *Encoder, v interface{}) error {
 			if vk == reflect.Interface || ve == reflect.Interface {
 				return fmt.Errorf("will not encode a map with interface{} as keys/values")
 			}
-			if err := encode(enc, uint64(val.Len())); err != nil {
+			if err := encode(enc, uint32(val.Len())); err != nil {
 				return err
 			}
 			for _, k := range val.MapKeys() {
@@ -384,9 +387,9 @@ func UnmarshalOnly(data []byte, v interface{}, tag string) (int, error) {
 	return len(data) - b.Len(), nil
 }
 
-func readN(r io.Reader, n uint64) ([]byte, error) {
+func readN(r io.Reader, n uint32) ([]byte, error) {
 	b := make([]byte, n)
-	sz := uint64(0)
+	sz := uint32(0)
 	for sz < n {
 		nBytes, err := r.Read(b[sz:])
 		if err != nil {
@@ -397,7 +400,7 @@ func readN(r io.Reader, n uint64) ([]byte, error) {
 		if nBytes == 0 {
 			break
 		}
-		sz += uint64(nBytes)
+		sz += uint32(nBytes)
 	}
 	return b, nil
 }
@@ -533,7 +536,7 @@ func decode(dec *Decoder, v interface{}) error {
 		val.SetBool(v)
 	// strings
 	case string:
-		var sz uint64
+		var sz uint32
 		if err := decode(dec, &sz); err != nil {
 			return err
 		}
@@ -566,7 +569,7 @@ func decode(dec *Decoder, v interface{}) error {
 		case reflect.Array, reflect.Slice:
 			var (
 				addElem func(int, reflect.Value)
-				sz      uint64
+				sz      uint32
 			)
 			if k == reflect.Slice {
 				newS := reflect.New(reflect.SliceOf(val.Type().Elem()))
@@ -576,11 +579,11 @@ func decode(dec *Decoder, v interface{}) error {
 				}
 				addElem = func(i int, v reflect.Value) { val.Set(reflect.Append(val, v)) }
 			} else {
-				sz = uint64(val.Len())
+				sz = uint32(val.Len())
 				addElem = func(i int, v reflect.Value) { val.Index(i).Set(v) }
 			}
 
-			for i := uint64(0); i < sz; i++ {
+			for i := uint32(0); i < sz; i++ {
 				v := reflect.New(val.Type().Elem())
 				if err := decode(dec, v.Interface()); err != nil {
 					return err
@@ -592,12 +595,12 @@ func decode(dec *Decoder, v interface{}) error {
 			if vk, ve := val.Type().Key().Kind(), val.Type().Elem().Kind(); ve == reflect.Interface || vk == reflect.Interface {
 				return fmt.Errorf("will not encode a map with interface{} as key/value")
 			}
-			var sz uint64
+			var sz uint32
 			if err := decode(dec, &sz); err != nil {
 				return err
 			}
 			val.Set(reflect.MakeMap(val.Type()))
-			for i := uint64(0); i < sz; i++ {
+			for i := uint32(0); i < sz; i++ {
 				k := reflect.New(val.Type().Key())
 				v := reflect.New(val.Type().Elem())
 				if err := decode(dec, k.Interface()); err != nil {
