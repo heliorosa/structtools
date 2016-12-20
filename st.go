@@ -147,6 +147,17 @@ func Marshal(v interface{}) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func MarshalOnly(v interface{}, tag string) ([]byte, error) {
+	b := bytes.NewBuffer(make([]byte, 0, 128))
+	enc := NewEncoder(b)
+	enc.OnlyTagged = true
+	enc.Tag = tag
+	if err := enc.Encode(v); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
 // Encoder is used to marshal several values to an io.Writer
 type Encoder struct {
 	w io.Writer
@@ -357,6 +368,17 @@ func (d *Decoder) Decode(v interface{}) error { return decode(d, v) }
 func Unmarshal(data []byte, v interface{}) (int, error) {
 	b := bytes.NewReader(data)
 	if err := NewDecoder(b).Decode(v); err != nil {
+		return 0, err
+	}
+	return len(data) - b.Len(), nil
+}
+
+func UnmarshalOnly(data []byte, v interface{}, tag string) (int, error) {
+	b := bytes.NewReader(data)
+	dec := NewDecoder(b)
+	dec.OnlyTagged = true
+	dec.Tag = tag
+	if err := dec.Decode(v); err != nil {
 		return 0, err
 	}
 	return len(data) - b.Len(), nil
@@ -586,17 +608,6 @@ func decode(dec *Decoder, v interface{}) error {
 				}
 				val.SetMapIndex(k.Elem(), v.Elem())
 			}
-			// if err := encode(enc, uint64(val.Len())); err != nil {
-			// 	return err
-			// }
-			// for _, k := range val.MapKeys() {
-			// 	if err := encode(enc, k.Interface()); err != nil {
-			// 		return err
-			// 	}
-			// 	if err := encode(enc, val.MapIndex(k).Interface()); err != nil {
-			// 		return err
-			// 	}
-			// }
 		}
 
 	}
