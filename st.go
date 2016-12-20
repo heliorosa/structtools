@@ -147,9 +147,10 @@ func Marshal(v interface{}) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// MarshalOnly is an utility function that sets the field OnlyTagged
-// to true and the field Tag to tag. In these conditions, struct fields
-// are marshaled only if they are tagged with something other than "" or "-"
+// MarshalOnly is an utility function that creates an *Encoder and sets
+// the field OnlyTagged to true and the field Tag to tag. In these
+// conditions, struct fields are marshaled only if they are tagged with
+// something other than "" or "-"
 func MarshalOnly(v interface{}, tag string) ([]byte, error) {
 	b := bytes.NewBuffer(make([]byte, 0, 128))
 	enc := NewEncoder(b)
@@ -376,6 +377,10 @@ func Unmarshal(data []byte, v interface{}) (int, error) {
 	return len(data) - b.Len(), nil
 }
 
+// UnmarshalOnly is an utility function that creates a *Decoder and
+// sets the field OnlyTagged to true and the field Tag to tag. In these
+// conditions, struct fields are unmarshaled only if they are tagged
+// with something other than "" or "-"
 func UnmarshalOnly(data []byte, v interface{}, tag string) (int, error) {
 	b := bytes.NewReader(data)
 	dec := NewDecoder(b)
