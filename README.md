@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/heliorosa/structtools.svg?branch=master)](https://travis-ci.org/heliorosa/structtools)&nbsp;[![Coverage Status](https://coveralls.io/repos/github/heliorosa/structtools/badge.svg?branch=master)](https://coveralls.io/github/heliorosa/structtools?branch=master)&nbsp;[![godoc reference](https://godoc.org/github.com/heliorosa/structtools?status.svg)](https://godoc.org/github.com/heliorosa/structtools)&nbsp;[![Go Report Card](https://goreportcard.com/badge/github.com/heliorosa/structtools)](https://goreportcard.com/report/github.com/heliorosa/structtools)
 # structtools
 
 Go package with utility functions to handle structs
