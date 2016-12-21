@@ -179,6 +179,12 @@ func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{w: w, Tag: DefaultTag, ByteOrder: DefaultByteOrder}
 }
 
+// NewEncoderWithTags creates a new Encoder with the given options, ByteOrder
+// is still set to DefaultByteOrder
+func NewEncoderWithTags(w io.Writer, tag string, onlyTagged bool) *Encoder {
+	return &Encoder{w: w, Tag: tag, OnlyTagged: onlyTagged, ByteOrder: DefaultByteOrder}
+}
+
 // Encode value V
 func (e *Encoder) Encode(v interface{}) error { return encode(e, v) }
 
@@ -363,6 +369,12 @@ type Decoder struct {
 // NewDecoder creates a new decoder that reads from r
 func NewDecoder(r io.Reader) *Decoder {
 	return &Decoder{r: r, Tag: DefaultTag, ByteOrder: DefaultByteOrder}
+}
+
+// NewDecoderWithTags creates a new decoder with the given options,
+// ByteOrder still defaults to DefaultByteOrder
+func NewDecoderWithTags(r io.Reader, tag string, onlyTagged bool) *Decoder {
+	return &Decoder{r: r, Tag: tag, OnlyTagged: onlyTagged, ByteOrder: DefaultByteOrder}
 }
 
 // Decode value v
